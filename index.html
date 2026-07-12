@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clipper</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0a0a0a;
+      color: #f0f0f0;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    header h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    header h1 span { color: #a855f7; }
+    header p {
+      color: #888;
+      margin-top: 6px;
+      font-size: 0.9rem;
+    }
+
+    .card {
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 16px;
+      padding: 20px;
+      max-width: 560px;
+      margin: 0 auto 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    input[type="url"], input[type="number"] {
+      width: 100%;
+      background: #1e1e1e;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      color: #f0f0f0;
+      font-size: 1rem;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: #a855f7; }
+    input::placeholder { color: #444; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    button#submitBtn {
+      display: block;
+      width: 100%;
+      max-width: 560px;
+      margin: 0 auto;
+      background: #a855f7;
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    button#submitBtn:hover { background: #9333ea; }
+    button#submitBtn:disabled { opacity: 0.4; cursor: default; }
+
+    /* Progress */
+    #progressSection {
+      max-width: 560px;
+      margin: 24px auto 0;
+      display: none;
+    }
+    .progress-label {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .progress-bar-bg {
+      background: #1e1e1e;
+      border-radius: 99px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #a855f7, #ec4899);
+      border-radius: 99px;
+      transition: width 0.5s ease;
+      width: 0%;
+    }
+
+    /* Results */
+    #results {
+      max-width: 560px;
+      margin: 28px auto 0;
+    }
+    #results h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #ccc;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .clip-card {
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .clip-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .clip-hook {
+      font-size: 0.8rem;
+      color: #a855f7;
+      font-style: italic;
+      margin-bottom: 6px;
+    }
+    .clip-meta {
+      font-size: 0.75rem;
+      color: #666;
+      margin-bottom: 12px;
+    }
+    .clip-reason {
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 10px;
+      background: #000;
+      margin-bottom: 10px;
+    }
+
+    .dl-btn {
+      display: block;
+      text-align: center;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #f0f0f0;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 10px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .dl-btn:hover { background: #2a2a2a; }
+
+    .error-box {
+      background: #2a0a0a;
+      border: 1px solid #5a1a1a;
+      border-radius: 12px;
+      color: #f87171;
+      font-size: 0.85rem;
+      padding: 14px 16px;
+      max-width: 560px;
+      margin: 20px auto 0;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>clip<span>per</span></h1>
+    <p>Paste any video URL → get viral clips with captions</p>
+  </header>
+
+  <div class="card">
+    <label for="urlInput">Video URL</label>
+    <input type="url" id="urlInput"
+      placeholder="YouTube, TikTok, Instagram, Twitter…" autocomplete="off" />
+
+    <div class="row">
+      <div>
+        <label for="clipsInput" style="margin-top:16px;">Clips to extract</label>
+        <input type="number" id="clipsInput" value="3" min="1" max="8" />
+      </div>
+      <div>
+        <label for="durationInput" style="margin-top:16px;">Target length (sec)</label>
+        <input type="number" id="durationInput" value="60" min="15" max="180" />
+      </div>
+    </div>
+  </div>
+
+  <button id="submitBtn">✂️ Extract Clips</button>
+
+  <div id="progressSection">
+    <p class="progress-label" id="progressLabel">Starting…</p>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div id="results"></div>
+
+  <script>
+    const btn = document.getElementById("submitBtn");
+    const urlInput = document.getElementById("urlInput");
+    const clipsInput = document.getElementById("clipsInput");
+    const durationInput = document.getElementById("durationInput");
+    const progressSection = document.getElementById("progressSection");
+    const progressLabel = document.getElementById("progressLabel");
+    const progressFill = document.getElementById("progressFill");
+    const errorBox = document.getElementById("errorBox");
+    const results = document.getElementById("results");
+
+    let pollTimer = null;
+
+    btn.addEventListener("click", async () => {
+      const url = urlInput.value.trim();
+      if (!url) { urlInput.focus(); return; }
+
+      // Reset UI
+      results.innerHTML = "";
+      errorBox.style.display = "none";
+      progressSection.style.display = "block";
+      progressFill.style.width = "0%";
+      progressLabel.textContent = "Starting…";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/api/clip", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url,
+            clips: parseInt(clipsInput.value),
+            duration: parseInt(durationInput.value),
+          }),
+        });
+        const { job_id, error } = await res.json();
+        if (error) throw new Error(error);
+        pollStatus(job_id);
+      } catch (e) {
+        showError(e.message);
+      }
+    });
+
+    function pollStatus(jobId) {
+      clearInterval(pollTimer);
+      pollTimer = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/status/${jobId}`);
+          const job = await res.json();
+
+          progressFill.style.width = job.progress + "%";
+          progressLabel.textContent = job.status;
+
+          if (job.status === "done") {
+            clearInterval(pollTimer);
+            btn.disabled = false;
+            progressSection.style.display = "none";
+            showClips(job.clips);
+          } else if (job.status === "error") {
+            clearInterval(pollTimer);
+            btn.disabled = false;
+            progressSection.style.display = "none";
+            showError(job.error || "Something went wrong.");
+          }
+        } catch {
+          // keep polling on network blip
+        }
+      }, 2000);
+    }
+
+    function showClips(clips) {
+      if (!clips || clips.length === 0) {
+        showError("No clips were generated. Try a different video.");
+        return;
+      }
+      results.innerHTML = `<h2>🎬 ${clips.length} clip${clips.length > 1 ? "s" : ""} ready</h2>`;
+      clips.forEach((c, i) => {
+        const duration = c.duration || Math.round(c.end - c.start);
+        const card = document.createElement("div");
+        card.className = "clip-card";
+        card.innerHTML = `
+          <div class="clip-title">${i + 1}. ${escHtml(c.title)}</div>
+          <div class="clip-hook">"${escHtml(c.hook)}"</div>
+          <div class="clip-meta">${duration}s · starts at ${fmt(c.start)}</div>
+          <div class="clip-reason">${escHtml(c.reason)}</div>
+          <video src="${c.url}" controls playsinline preload="metadata"></video>
+          <a class="dl-btn" href="${c.url}" download="${escHtml(c.filename)}">⬇ Download</a>
+        `;
+        results.appendChild(card);
+      });
+    }
+
+    function showError(msg) {
+      errorBox.textContent = "❌ " + msg;
+      errorBox.style.display = "block";
+      btn.disabled = false;
+    }
+
+    function fmt(secs) {
+      const m = Math.floor(secs / 60);
+      const s = Math.floor(secs % 60);
+      return `${m}:${String(s).padStart(2, "0")}`;
+    }
+
+    function escHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+  </script>
+</body>
+</html>
